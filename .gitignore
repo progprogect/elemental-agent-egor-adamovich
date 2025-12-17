@@ -23,5 +23,5 @@ npm-debug.log*
 Thumbs.db
 
 # Prisma
-prisma/migrations/
+# prisma/migrations/ - commented out to include migrations in repo for Railway
 
