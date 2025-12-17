@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String          @id @default(uuid())
+  instagramUserId   String          @unique
+  username          String?
+  fullName          String?
+  phone             String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  conversations     Conversation[]
+  appointments      Appointment[]
+}
+
+model Conversation {
+  id                String          @id @default(uuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status            ConversationStatus @default(ACTIVE)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  messages          Message[]
+  appointments      Appointment[]
+}
+
+model Message {
+  id                String          @id @default(uuid())
+  conversationId    String
+  conversation      Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  instagramMessageId String        @unique
+  role              MessageRole
+  content           String          @db.Text
+  metadata          Json?
+  createdAt         DateTime        @default(now())
+}
+
+model Appointment {
+  id                String          @id @default(uuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId    String
+  conversation      Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  serviceType       String?
+  patientName       String
+  phone             String
+  preferredTime     String?
+  notes             String?         @db.Text
+  status            AppointmentStatus @default(PENDING)
+  createdAt         DateTime        @default(now())
+}
+
+enum ConversationStatus {
+  ACTIVE
+  COMPLETED
+  APPOINTMENT_BOOKED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
