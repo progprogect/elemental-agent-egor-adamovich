@@ -1,19 +1,6 @@
-export enum ConversationStatus {
-  ACTIVE = 'ACTIVE',
-  COMPLETED = 'COMPLETED',
-  APPOINTMENT_BOOKED = 'APPOINTMENT_BOOKED',
-}
-
-export enum MessageRole {
-  USER = 'USER',
-  ASSISTANT = 'ASSISTANT',
-}
-
-export enum AppointmentStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  CANCELLED = 'CANCELLED',
-}
+// Re-export Prisma enums to avoid type conflicts
+import { MessageRole } from '@prisma/client';
+export { ConversationStatus, MessageRole, AppointmentStatus } from '@prisma/client';
 
 export interface InstagramWebhookEntry {
   id: string;

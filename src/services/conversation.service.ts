@@ -66,7 +66,7 @@ export class ConversationService {
       conversationId: conversation.id,
       userId: conversation.userId,
       messages: messages.map((msg) => ({
-        role: msg.role as MessageRole,
+        role: msg.role,
         content: msg.content,
       })),
     };
