@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат с врачом - Тестирование бота</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .new-conversation-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .new-conversation-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 12px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 24px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .message-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .loading-dots {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-dots span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border-left: 4px solid #c62828;
+        }
+
+        .appointment-notification {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border-left: 4px solid #2e7d32;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>💬 Чат с врачом</h1>
+            <button class="new-conversation-btn" id="newConversationBtn">Новая беседа</button>
+        </div>
+        
+        <div class="messages-container" id="messagesContainer">
+            <!-- Сообщения будут добавлены сюда -->
+        </div>
+        
+        <div class="input-container">
+            <input 
+                type="text" 
+                class="message-input" 
+                id="messageInput" 
+                placeholder="Введите ваше сообщение..."
+                autocomplete="off"
+            />
+            <button class="send-btn" id="sendBtn">Отправить</button>
+        </div>
+    </div>
+
+    <script>
+        // Состояние приложения
+        let currentConversationId = null;
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const newConversationBtn = document.getElementById('newConversationBtn');
+
+        // Загрузить conversationId из localStorage при загрузке страницы
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedConversationId = localStorage.getItem('conversationId');
+            if (savedConversationId) {
+                currentConversationId = savedConversationId;
+                loadConversationHistory(savedConversationId);
+            }
+            messageInput.focus();
+        });
+
+        // Отправка сообщения по Enter
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Отправка сообщения по клику
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Новая беседа
+        newConversationBtn.addEventListener('click', createNewConversation);
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || sendBtn.disabled) return;
+
+            // Очистить input и отключить кнопку
+            messageInput.value = '';
+            sendBtn.disabled = true;
+
+            // Показать сообщение пользователя
+            addMessage('USER', message);
+
+            // Показать индикатор загрузки
+            const loadingId = showLoading();
+
+            try {
+                const response = await fetch('/api/chat/message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        conversationId: currentConversationId,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Ошибка при отправке сообщения');
+                }
+
+                // Сохранить conversationId
+                currentConversationId = data.conversationId;
+                localStorage.setItem('conversationId', data.conversationId);
+
+                // Убрать индикатор загрузки
+                removeLoading(loadingId);
+
+                // Показать ответ ассистента
+                addMessage('ASSISTANT', data.response);
+
+                // Показать уведомление о создании записи, если она была создана
+                if (data.appointmentCreated) {
+                    showAppointmentNotification();
+                }
+            } catch (error) {
+                removeLoading(loadingId);
+                showError(error.message || 'Произошла ошибка при отправке сообщения');
+            } finally {
+                sendBtn.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        async function createNewConversation() {
+            if (confirm('Вы уверены, что хотите начать новую беседу? История текущей беседы будет сохранена.')) {
+                try {
+                    const response = await fetch('/api/chat/conversation', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Ошибка при создании беседы');
+                    }
+
+                    // Очистить текущую беседу
+                    currentConversationId = data.conversationId;
+                    localStorage.setItem('conversationId', data.conversationId);
+                    messagesContainer.innerHTML = '';
+                    
+                    // Показать приветственное сообщение
+                    addMessage('ASSISTANT', 'Здравствуйте! Я врач-косметолог. Чем могу помочь?');
+                } catch (error) {
+                    showError(error.message || 'Произошла ошибка при создании новой беседы');
+                }
+            }
+        }
+
+        async function loadConversationHistory(conversationId) {
+            try {
+                const response = await fetch(`/api/chat/conversation/${conversationId}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Ошибка при загрузке истории');
+                }
+
+                // Очистить контейнер
+                messagesContainer.innerHTML = '';
+
+                // Добавить все сообщения
+                data.messages.forEach(msg => {
+                    addMessage(msg.role, msg.content, false);
+                });
+            } catch (error) {
+                console.error('Error loading conversation history:', error);
+                // Если беседа не найдена, создаем новую
+                if (error.message.includes('not found')) {
+                    localStorage.removeItem('conversationId');
+                    currentConversationId = null;
+                }
+            }
+        }
+
+        function addMessage(role, content, scroll = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role.toLowerCase()}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+
+            if (scroll) {
+                scrollToBottom();
+            }
+        }
+
+        function showLoading() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading';
+            loadingDiv.id = `loading-${Date.now()}`;
+            
+            const dotsDiv = document.createElement('div');
+            dotsDiv.className = 'loading-dots';
+            dotsDiv.innerHTML = '<span></span><span></span><span></span>';
+            
+            loadingDiv.appendChild(dotsDiv);
+            messagesContainer.appendChild(loadingDiv);
+            scrollToBottom();
+
+            return loadingDiv.id;
+        }
+
+        function removeLoading(loadingId) {
+            const loadingElement = document.getElementById(loadingId);
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = `❌ ${message}`;
+            messagesContainer.appendChild(errorDiv);
+            scrollToBottom();
+
+            // Убрать ошибку через 5 секунд
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        function showAppointmentNotification() {
+            const notificationDiv = document.createElement('div');
+            notificationDiv.className = 'appointment-notification';
+            notificationDiv.textContent = '✅ Запись на консультацию создана! Наша команда свяжется с вами в ближайшее время.';
+            messagesContainer.appendChild(notificationDiv);
+            scrollToBottom();
+
+            // Убрать уведомление через 10 секунд
+            setTimeout(() => {
+                notificationDiv.remove();
+            }, 10000);
+        }
+
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>
+
